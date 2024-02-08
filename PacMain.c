@@ -61,7 +61,7 @@ int main(){
     boolean login = FALSE;
     FILE *fp1, *fp2, *fp3;
     char *Matrix, c, *tmpMat;
-    char filename[15] = "Pacman_History.bin";
+    char filename[19] = "Pacman_History.bin";
 
     pHead = LoadAll(filename); 
 
@@ -207,13 +207,13 @@ void Logged_In_Menu(USER* pUser, USER* Head){
 
     boolean login = TRUE;
     char dif;
-    int m, n;
+    int m, n, cmd2, cmd3, cmd1;
     char **tmpMatrix = NULL;
     
     while(login){
         printf("\nPlay  (1)\nLogout  (2)\nDelete Account  (3)\nExit  (0)\n");
-        scanf ("%d", &cmd);        
-        switch (cmd){
+        scanf ("%d", &cmd1);        
+        switch (cmd1){
             case 0:
                 exit(0);
             case 1:
@@ -222,14 +222,14 @@ void Logged_In_Menu(USER* pUser, USER* Head){
                     while(!tmpMatrix){
                         system("cls");
                         printf("You have an unfinished game!\n\nResume last game (1)\nStart new Game (2)\nBack (0)\n");
-                        scanf ("%d", &cmd);
-                        switch(cmd){
+                        scanf ("%d", &cmd2);
+                        switch(cmd2){
                             case 0:
                                 break;
                             case 1:
                                 //resume game
                                 FILE* filep;
-                                filep = fopen(pUser->FileName, "rb");
+                                filep = fopen(pUser->FileName, "r");
                                 fread(&m, sizeof(int), 1, filep);
                                 fread(&n, sizeof(int), 1, filep);
                                 fread(tmpMatrix, sizeof(char), m*n, filep);
@@ -237,10 +237,10 @@ void Logged_In_Menu(USER* pUser, USER* Head){
                                 //start new game
                                 //ask for difficultly
                                 printf("Enter your desired difficulty:\n Easy(1)\n Medium(2)\n Hard(3)\n");
-                                scanf("%d", &cmd);
+                                scanf("%d", &cmd3);
                                 
                                 while(tmpMatrix==NULL){
-                                    switch (cmd){
+                                    switch (cmd3){
                                         case 1:
                                             //read map a
                                             tmpMatrix = LoadMap("mapA.txt");
@@ -266,6 +266,7 @@ void Logged_In_Menu(USER* pUser, USER* Head){
                                 break;
                             default:
                                 printf("Pleas enter from given numbers...");
+                                sleep(3);
                                 system("cls");
                                 break;
                         }
@@ -276,18 +277,18 @@ void Logged_In_Menu(USER* pUser, USER* Head){
                     while(!tmpMatrix){
                         system("cls");
                         printf("\nStart new Game (1)\nBack (0)\n");
-                        scanf ("%d", &cmd);
-                        switch(cmd){
+                        scanf ("%d", &cmd2);
+                        switch(cmd2){
                             case 0:
                                 break;
                             case 1:
                                 //start new game
                                 //ask for difficultly
                                 printf("Enter your desired difficulty:\n Easy(1)\n Medium(2)\n Hard(3)\n");
-                                scanf("%d", &cmd);
+                                scanf("%d", &cmd3);
                                 
                                 while(tmpMatrix==NULL){
-                                    switch (cmd){
+                                    switch (cmd3){
                                         case 1:
                                             //read map a
                                             tmpMatrix = LoadMap("mapA.txt");
@@ -305,6 +306,7 @@ void Logged_In_Menu(USER* pUser, USER* Head){
                                             break;
                                         default:
                                             printf("Pleas enter from given numbers.\n");
+                                            sleep(3);
                                             system("cls");
                                             break;
                                     }
@@ -313,6 +315,7 @@ void Logged_In_Menu(USER* pUser, USER* Head){
                                 break;
                             default:
                                 printf("Pleas enter from given numbers...");
+                                sleep (3);
                                 system("cls");
                                 break;
                         }
@@ -332,12 +335,12 @@ void Logged_In_Menu(USER* pUser, USER* Head){
                 break;
             default:
                 printf ("Pleas enter from given numbers.");
+                sleep(3);
                 system("cls");
                 break;
         }
-        printf("\nEnter 1 to Play\n Enter 2 to logout\nEnter 3 to delete account\n Enter 0 to Exit\n");
-        scanf ("%d", &cmd);
     }
+    Un_Logged_Menu(Head,Num);
 }
 USER* Un_Logged_Menu(USER* Head, int num){
     system("cls");
