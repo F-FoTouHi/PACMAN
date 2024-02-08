@@ -44,6 +44,10 @@ boolean SaveAll(char*, USER*);
 void draw(char**, int, int);
 int Play(USER*, char**, char ); //it recieve user information and Map then give the score.
 char** Import_Mat2Map(char**, int, int);
+void gotoxy(short x, short y) {
+    COORD pos = {x, y};
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+}
 
 //Global variables:
 unsigned long long int username;
@@ -57,7 +61,8 @@ int main(){
     boolean login = FALSE;
     FILE *fp1, *fp2, *fp3;
     char *Matrix, c, *tmpMat;
-    char* filename = "Pacman_History";
+    char filename[15] = "Pacman_History.bin";
+
     pHead = LoadAll(filename); 
 
     //updating num:
@@ -68,7 +73,11 @@ int main(){
     }
     
     StartInitialize();
-
+    if(pHead)
+        pUser = Un_Logged_Menu(pHead, Num);
+    else    
+        pUser = pHead = Un_Logged_Menu(pHead, Num);
+    Logged_In_Menu(pUser, pHead);
     return 0;
 }
 
@@ -97,6 +106,7 @@ void Win(void){
     //sleep
     sleep(10);
     system("cls");
+    setColor(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 } //just display
 void GameOver(void){
     system("cls");
@@ -124,6 +134,7 @@ void GameOver(void){
     //play audio
     sleep(7);
     system("cls");
+    setColor(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
     //back to menu
 } //just display
 void StartInitialize(void){
@@ -140,19 +151,19 @@ void StartInitialize(void){
     //set color to red:
     setColor(FOREGROUND_RED | FOREGROUND_INTENSITY);
 
-    printf("\n\n\n\n\n\n\n\n\n\n\n\n");
+    printf("\n\n\n\n\n\n\n\n\n");
     //system("cls");
-    printf("##### #           #               #######\n");
-    printf("#       #        # #             #       \n");
-    printf("#        #      #   #           #        \n");
-    printf("#        #     #     #         #         \n");
-    printf("#       #     #       #       #          \n");
-    printf("##### #      ###########     #           \n");
-    printf("#           #           #     #          \n");
-    printf("#          #             #     #         \n");
-    printf("#         #               #     #        \n");
-    printf("#        #                 #     #       \n");
-    printf("#       #                   #     #######\n");
+    printf("                      ##### #           #               #######\n");
+    printf("                      #       #        # #             #       \n");
+    printf("                      #        #      #   #           #        \n");
+    printf("                      #        #     #     #         #         \n");
+    printf("                      #       #     #       #       #          \n");
+    printf("                      ##### #      ###########     #           \n");
+    printf("                      #           #           #     #          \n");
+    printf("                      #          #             #     #         \n");
+    printf("                      #         #               #     #        \n");
+    printf("                      #        #                 #     #       \n");
+    printf("                      #       #                   #     #######\n");
 
     //play AUDIO 
     //change color to green
@@ -171,18 +182,30 @@ void StartInitialize(void){
     printf("      #                             #   #                   #   #         #\n");
 
     setColor(FOREGROUND_INTENSITY | FOREGROUND_INTENSITY);
+    sleep(4);
     printf("Press any key to continue...");
-    if(kbhit>0){
-        //stop audio
-        //next page
-        system("cls");
+    while (1) {
+        int x = rand() % 80; // مختصات تصادفی برای x
+        int y = rand() % 25; // مختصات تصادفی برای y
+        
+        gotoxy(x, y);
+        printf("X");
+
+        Sleep(300); // توقف نیم ثانیه
+        if(kbhit()>0){
+            //stop audio
+            //next page
+            system("cls");
+            break;
+        }
     }
+    setColor(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 }//just display
 
 void Logged_In_Menu(USER* pUser, USER* Head){
     system("cls");
 
-    boolean login = FALSE;
+    boolean login = TRUE;
     char dif;
     int m, n;
     char **tmpMatrix = NULL;
@@ -328,19 +351,26 @@ USER* Un_Logged_Menu(USER* Head, int num){
                 exit(0);    
             case 1:
                 Num++;
+                printf("\nUsername must be numberic!\n");
                 printf("\nUsername: ");
                 scanf("%s", &username);
                 printf("\nPassword: ");
                 scanf("%s", password);
 
-                pUser = CreatAccount(username, password, Head, Num);
+                if (Head)
+                    pUser = CreatAccount(username, password, Head, Num);
+                else
+                    pUser = Head = CreatAccount(username, password, Head, Num);
                 if (pUser){
                     login = TRUE;
-
+                    printf("\nCreating account is done successfully\n");
+                    sleep(4);
                 }
-                else 
+                else {
                     printf("\n Username is duplicated!\n Pleas try again.\n");
+                    sleep(5);
                     system("cls");
+                }
                 break;
             case 2:
                 printf("\nUsername: ");
@@ -349,21 +379,27 @@ USER* Un_Logged_Menu(USER* Head, int num){
                 scanf("%s", &password);
 
                 pUser = Login(username, password, Head);
-                if (pUser)
+                if (pUser){
                     login = TRUE;
-                else 
+                    printf("\nLogin is done successfully\n");
+                    sleep(4);
+                }   
+                else {
                     printf("\n Username or password is incorrect!\n Pleas try again.\n");
+                    sleep(5);
                     system("cls");
+                }    
                 break;
             default:
                 printf ("Pleas enter from given numbers.");
+                sleep(4);
                 system("cls");
                 break;
         }
     }
     system("cls");
     //here login is true and we can start the game, logout or delete account:
-    Logged_In_Menu(pUser, Head);
+    return pUser;
 }
 
 USER* Login(unsigned long long int user, char* pass, USER* phead){
@@ -404,7 +440,7 @@ USER* CreatAccount(unsigned long long int user, char* pass, USER* phead, int ID)
         }
         p1 = (USER*)malloc(sizeof(USER));
         p1->pNext= NULL;
-        if(phead)
+        if(phead == NULL)
             phead = p1;
         else
             ptmp->pNext = p1;
@@ -413,13 +449,20 @@ USER* CreatAccount(unsigned long long int user, char* pass, USER* phead, int ID)
         scanf ("\nWhat is your name? %s", Name);
         strcpy(p1->name, Name);
         tmpid = ID;
-        for(int i=8; i>0; i--){
+        for(int i=7; i>=0; i--){
             p1->FileName[i] =  tmpid%10 + '0';
         }
+        p1->FileName[8] = '.';
+        p1->FileName[9] = 't';
+        p1->FileName[10] = 't';
+        p1->FileName[11] = 't';
         p1->ID = ID;
         p1->Level = 0;
         p1->Status = FALSE;
-        return p1;
+        if (phead)
+            return p1;
+        else    
+            return phead;
     }
         
 } //...
@@ -473,7 +516,7 @@ void draw(char** mat, int m, int n){
 int Play(USER* User, char**mat, char dif){
     //EatenPoints;
     int Eaten = 0, m = 0, n = 0, i, j, numOfpnt = 0;
-    boolean Exit = FALSE, End = FALSE, res = FALSE;
+    boolean End = FALSE, res = FALSE;
     PACMAN Pacy;
     char input, tmp, **map, inp;
      
@@ -514,7 +557,7 @@ int Play(USER* User, char**mat, char dif){
     
         map = Import_Mat2Map(mat, m, n);
         draw(map, 4*m, 6*n);
-    
+        printf("\nPress E to EXIT\n");
         input= getch();
         switch (input){
             case 72://UP
@@ -591,7 +634,7 @@ int Play(USER* User, char**mat, char dif){
                     if (SaveGame(User, mat, m, n) == FALSE);
                         printf("The Game is not saved!");
                     //sleeeeeeeeeeeeeeep/////////////
-                    Exit(0);
+                    exit(0);
                 }
                 break;
             default:
@@ -637,11 +680,10 @@ USER* LoadAll(char* fileName){
     USER *Head = NULL, *pNew, *pLast;
     fp = fopen(fileName, "rb");
     if (fp == NULL){
-        return 0;
+        return NULL;
     }
     fseek(fp, 0, SEEK_END);
-    No = ftell(fp)/sizeof(USER);
-    Num = No;
+    Num = No = ftell(fp)/sizeof(USER);
     pNew = pLast = Head;
     for(i=0; i<No; i++){ //is this work to?
         pNew = (USER*)malloc(sizeof(USER));
