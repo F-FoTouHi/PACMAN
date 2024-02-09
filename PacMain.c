@@ -441,8 +441,10 @@ USER* Login(unsigned long long int user, char* pass, USER* phead){
     USER *p1, *ptmp;
     ptmp = phead;
     while(ptmp){
-        if((ptmp->username == user) && strcpy(ptmp->password, pass)!=0 )
+        if((ptmp->username != user) || strcmp(ptmp->password, pass)!=0 )
             ptmp = ptmp ->pNext;
+        else
+            break;
     }
     if(ptmp->pNext == NULL) { //fail
         return NULL;
@@ -453,7 +455,7 @@ USER* Login(unsigned long long int user, char* pass, USER* phead){
 USER* CreatAccount(unsigned long long int user, char* pass, USER* phead, int ID){
     USER *p1 = NULL, *ptmp;
     ptmp = phead;
-    char* Name;
+    char Name[50];
     int tmpid;
     while(ptmp){
         if((char)(ptmp->username) == user)
@@ -517,18 +519,20 @@ void DeleteAccount(USER* phead, int id, int No){
 char** LoadMap(char* filename){
     char** Mat;
     FILE* fp;
-    int m, n;
+    int m, n, i;
     fp = fopen(filename, "r");
     fscanf(fp,"%d %d", &m, &n);
-    Mat = (char**)malloc(m);
-    *Mat = (char*)malloc(n);
-    for(int i=0; i<m; i++){
+    Mat = (char**)malloc(sizeof(char*)*m);
+    for(i=0; i<m; i++){
+        Mat[i] = (char*)malloc(sizeof(char)*n);
+    }
+    for(i=0; i<m; i++){
         for(int j=0; j<n; j++){
             fscanf(fp,"%c", Mat[i][j]); //???????????????????????????????
         }
     }
     fclose(fp);
-    for(int i=0; i<m; i++){
+    for( i=0; i<m; i++){
         for (int j=0; j<n; j++){
             if (Mat[i][j]=='|' || Mat[i][j] == '-')
                 Mat[i][j] = '#';
@@ -853,7 +857,7 @@ boolean SaveGame(USER* user, char** Map, int m, int n){
     //here tmp point to user:
     fp = fopen(tmp->FileName, "wb");
     if(fp==NULL)
-        return 0;
+        return FALSE;
     fwrite(&m,sizeof(int), 1, fp);
     fwrite(&n,sizeof(int), 1, fp);    
     for(i=0; i<m; i++){
@@ -871,18 +875,27 @@ char** RestoreGame(USER *Head, int id){
     USER *tmp;
     int i, m, n;
     char **Mat;
-
-    fp = fopen(tmp->FileName, "rb");
+    
     tmp = Head;
     for(i=0; i<id-1; i++)
         tmp = tmp->pNext;
+    fp = fopen(tmp->FileName, "rb"); 
+
     if (tmp->Status == FALSE || fp == NULL)
-        return 0;
+        return NULL;
+
     fread(&m,sizeof(int),1,fp);
     fread(&n,sizeof(int),1,fp);
+
+    //allocate with m & n:
+    Mat = (char**)malloc(sizeof(char*)*m);
+    for(i=0; i<m; i++){
+        Mat[i] = (char*)malloc(sizeof(char)*n);
+    }
+
     for(i=0; i<m; i++){
         for (int j=0; j<n; j++){
-            fread(&Mat[i][j],sizeof(char),1,fp);
+            fread(&Mat[i][j],sizeof(char),1,fp); ///////////??????????????/
         }
     }
     fclose(fp);
@@ -892,8 +905,10 @@ char** RestoreGame(USER *Head, int id){
 char** Import_Mat2Map(char** mat, int m, int n){
     int i, j, k, l;
     char **NewMat;
-    NewMat = (char **)malloc(m*4);
-    *NewMat = (char*)malloc(n*6);
+    NewMat = (char **)malloc(sizeof(char*)*m*4);
+    for(i=0; i<n*6; i++){
+        NewMat[i] = (char*)malloc(sizeof(char)*n*6);
+    }
     for (i=0; i<m; i++){
         for(j=0; j<n; j++){
             switch (mat[i][j]){
@@ -963,7 +978,7 @@ char** Import_Mat2Map(char** mat, int m, int n){
                     for(k=0; k<6; k++)
                         NewMat[4*i][6*j+k] =' ';
                     for(k=1; k<3; k++){
-                        for(l=1; k<6; k+=4){
+                        for(l=1; l<6; l+=4){
                             NewMat[4*i+k][6*j+l]= '|';
                         }
                     }                    
@@ -978,6 +993,7 @@ char** Import_Mat2Map(char** mat, int m, int n){
                     NewMat[4*i+1][6*j+4]= 'O';
                     NewMat[4*i+3][6*j+1]= '.';
                     NewMat[4*i+3][6*j+5]= '.';
+                    break;
                 default:
                     break;
             }
