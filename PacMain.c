@@ -518,8 +518,8 @@ void draw(char** mat, int m, int n){
 }
 int Play(USER* User, char**mat, char dif){
     //EatenPoints;
-    int Eaten = 0, m = 0, n = 0, i, j, numOfpnt = 0;
-    boolean End = FALSE, res = FALSE;
+    int Eaten = 0, m = 0, n = 0, i, j, numOfpnt = 0, random, numOfG = 0, G_x[4], G_y[4], p_x[3], p_y[3];
+    boolean End = FALSE, res = FALSE, pFlag = FALSE;
     PACMAN Pacy;
     char input, tmp, **map, inp;
      
@@ -541,7 +541,7 @@ int Play(USER* User, char**mat, char dif){
         }
     }
 
-    //find loc of @ & No of P: 
+    //find loc of @  loc and No of  G & No of P: 
     for(i=0;i<m;i++){
         for (j=0; j<n; j++){
             if(map[i][j]=='@'){
@@ -551,6 +551,11 @@ int Play(USER* User, char**mat, char dif){
             }
             if(map[i][j] == 'P')
                 numOfpnt++;
+            if(map[i][j] == 'G'){
+                G_x[numOfG] = i;
+                G_y[numOfG] = j;
+                numOfG++;
+            }
         }
     }
     printf ("Use the Arrow Keys to move Pacman\n");
@@ -561,87 +566,206 @@ int Play(USER* User, char**mat, char dif){
         map = Import_Mat2Map(mat, m, n);
         draw(map, 4*m, 6*n);
         printf("\nPress E to EXIT\n");
-        input= getch();
-        switch (input){
-            case 72://UP
-                if(mat[Pacy.x-1][Pacy.y] != '#'){
-                    if(mat[Pacy.x-1][Pacy.y]=='G'){
-                        res = 0;
-                        End = TRUE;
-                    }
-                    else{
-                        if(mat[Pacy.x-1][Pacy.y]=='P'){
-                            Eaten++;
+
+        //Random Ghost moving:
+
+        for(i=0; i<numOfG; i++){
+            random = rand() % 4;
+
+            switch (random) {
+                case 0: //U
+                    if (mat[G_x[i]-1][G_y[i]] != '#') {
+                        if(mat[G_x[i]-1][G_y[i]] == '@'){
+                            mat[G_x[i]-1][G_y[i]] = 'G';
+                            mat[G_x[i]][G_y[i]] = ' ';
+                            ////fail game
+                            res = 0;
+                            End = TRUE;
                         }
-                        mat[Pacy.x-1][Pacy.y]='@';
-                        mat[Pacy.x][Pacy.y] = '\0';
-                        Pacy.x -= 1;
-                    }
-                }
-                break;
-            case 80://D
-                if(mat[Pacy.x+1][Pacy.y] != '#'){
-                    if(mat[Pacy.x+1][Pacy.y]=='G'){
-                        res = 0;
-                        End = TRUE;
-                    }
-                    else{
-                        if(mat[Pacy.x+1][Pacy.y]=='P'){
-                            Eaten++;
+                        else{
+                            if (mat[G_x[i]-1][G_y[i]] == 'P'){
+                                //flag to recover pill
+                                pFlag = TRUE;
+                                p_x[i] = G_x[i]-1;
+                                p_y[i] = G_y[i];
+                                mat[G_x[i]-1][G_y[i]] = 'G';
+                                mat[G_x[i]][G_y[i]] = ' ';
+                            }
+                            else{ // ' ' or 'G'
+                                mat[G_x[i]-1][G_y[i]] = 'G';
+                                mat[G_x[i]][G_y[i]] = ' ';                                
+                            }
                         }
-                        mat[Pacy.x+1][Pacy.y]='@';
-                        mat[Pacy.x][Pacy.y] = '\0';
-                        Pacy.x += 1;
+                        G_x[i]-=1;
                     }
-                }
-                break;
-            case 75://L
-                if(mat[Pacy.x][Pacy.y-1] != '#'){
-                    if(mat[Pacy.x][Pacy.y-1]=='G'){
-                        res = 0;
-                        End = TRUE;
-                    }
-                    else{
-                        if(mat[Pacy.x][Pacy.y-1]=='P'){
-                            Eaten++;
+                    break;
+                case 1://D
+                    if (mat[G_x[i]+1][G_y[i]] != '#') {
+                        if(mat[G_x[i]+1][G_y[i]] == '@'){
+                            mat[G_x[i]+1][G_y[i]] = 'G';
+                            mat[G_x[i]][G_y[i]] = ' ';
+                            ////fail game
+                            res = 0;
+                            End = TRUE;
                         }
-                        mat[Pacy.x][Pacy.y-1]='@';
-                        mat[Pacy.x][Pacy.y] = '\0';
-                        Pacy.y -= 1;
-                    }
-                }
-                break;
-            case 77://R
-                if(mat[Pacy.x][Pacy.y+1] != '#'){
-                    if(mat[Pacy.x][Pacy.y+1]=='G'){
-                        res = 0;
-                        End = TRUE;
-                    }
-                    else{
-                        if(mat[Pacy.x][Pacy.y+1]=='P'){
-                            Eaten++;
+                        else{
+                            if (mat[G_x[i]+1][G_y[i]] == 'P'){
+                                //flag to recover pill
+                                pFlag = TRUE;
+                                p_x[i] = G_x[i]+1;
+                                p_y[i] = G_y[i];
+                                mat[G_x[i]+1][G_y[i]] = 'G';
+                                mat[G_x[i]][G_y[i]] = ' ';
+                            }
+                            else{ // ' ' or 'G'
+                                mat[G_x[i]+1][G_y[i]] = 'G';
+                                mat[G_x[i]][G_y[i]] = ' ';                                
+                            }
                         }
-                        mat[Pacy.x][Pacy.y+1]='@';
-                        mat[Pacy.x][Pacy.y] = '\0';
-                        Pacy.y += 1;
+                        G_x[i]+=1;
+                    } 
+                    break;
+                case 2://L
+                    if (mat[G_x[i]][G_y[i]-1] != '#') {
+                        if(mat[G_x[i]][G_y[i]-1] == '@'){
+                            mat[G_x[i]][G_y[i]-1] = 'G';
+                            mat[G_x[i]][G_y[i]] = ' ';
+                            ////fail game
+                            res = 0;
+                            End = TRUE;
+                        }
+                        else{
+                            if (mat[G_x[i]][G_y[i]-1] == 'P'){
+                                //flag to recover pill
+                                pFlag = TRUE;
+                                p_x[i] = G_x[i];
+                                p_y[i] = G_y[i]-1;
+                                mat[G_x[i]][G_y[i]-1] = 'G';
+                                mat[G_x[i]][G_y[i]] = ' ';
+                            }
+                            else{ // ' ' or 'G'
+                                mat[G_x[i]][G_y[i]-1] = 'G';
+                                mat[G_x[i]][G_y[i]] = ' ';                                
+                            }
+                        }
+                        G_y[i]-=1;
                     }
-                }
-                break;
-            case 'E':
-                system("cls");
-                printf("\n\n\n\n\t\t Do you want to save game? (y/n)\n");
-                scanf ("%c", &inp);
-                if(inp == 'Y' || inp == 'y'){
-                    User->Status = TRUE;
-                    //save board:
-                    if (SaveGame(User, mat, m, n) == FALSE);
-                        printf("The Game is not saved!");
-                    //sleeeeeeeeeeeeeeep/////////////
-                    exit(0);
-                }
-                break;
-            default:
-                break;
+                    break;
+                case 3://R
+                    if (mat[G_x[i]][G_y[i]+1] != '#') {
+                        if(mat[G_x[i]][G_y[i]+1] == '@'){
+                            mat[G_x[i]][G_y[i]+1] = 'G';
+                            mat[G_x[i]][G_y[i]] = ' ';
+                            ////fail game
+                            res = 0;
+                            End = TRUE;
+                        }
+                        else{
+                            if (mat[G_x[i]][G_y[i]+1] == 'P'){
+                                //flag to recover pill
+                                pFlag = TRUE;
+                                p_x[i] = G_x[i];
+                                p_y[i] = G_y[i]+1;
+                                mat[G_x[i]][G_y[i]+1] = 'G';
+                                mat[G_x[i]][G_y[i]] = ' ';
+                            }
+                            else{ // ' ' or 'G'
+                                mat[G_x[i]][G_y[i]+1] = 'G';
+                                mat[G_x[i]][G_y[i]] = ' ';                                
+                            }
+                        }
+                        G_y[i]+=1;
+                    }
+                    break;
+                default:
+                    break;
+            }            
+        }
+       
+        //if kbhit>0 move pacman
+        if (_kbhit()){
+            input= getch();
+            switch (input){
+                case 72://UP
+                    if(mat[Pacy.x-1][Pacy.y] != '#'){
+                        if(mat[Pacy.x-1][Pacy.y]=='G'){
+                            res = 0;
+                            End = TRUE;
+                        }
+                        else{
+                            if(mat[Pacy.x-1][Pacy.y]=='P'){
+                                Eaten++;
+                            }
+                            mat[Pacy.x-1][Pacy.y]='@';
+                            mat[Pacy.x][Pacy.y] = '\0';
+                            Pacy.x -= 1;
+                        }
+                    }
+                    break;
+                case 80://D
+                    if(mat[Pacy.x+1][Pacy.y] != '#'){
+                        if(mat[Pacy.x+1][Pacy.y]=='G'){
+                            res = 0;
+                            End = TRUE;
+                        }
+                        else{
+                            if(mat[Pacy.x+1][Pacy.y]=='P'){
+                                Eaten++;
+                            }
+                            mat[Pacy.x+1][Pacy.y]='@';
+                            mat[Pacy.x][Pacy.y] = '\0';
+                            Pacy.x += 1;
+                        }
+                    }
+                    break;
+                case 75://L
+                    if(mat[Pacy.x][Pacy.y-1] != '#'){
+                        if(mat[Pacy.x][Pacy.y-1]=='G'){
+                            res = 0;
+                            End = TRUE;
+                        }
+                        else{
+                            if(mat[Pacy.x][Pacy.y-1]=='P'){
+                                Eaten++;
+                            }
+                            mat[Pacy.x][Pacy.y-1]='@';
+                            mat[Pacy.x][Pacy.y] = '\0';
+                            Pacy.y -= 1;
+                        }
+                    }
+                    break;
+                case 77://R
+                    if(mat[Pacy.x][Pacy.y+1] != '#'){
+                        if(mat[Pacy.x][Pacy.y+1]=='G'){
+                            res = 0;
+                            End = TRUE;
+                        }
+                        else{
+                            if(mat[Pacy.x][Pacy.y+1]=='P'){
+                                Eaten++;
+                            }
+                            mat[Pacy.x][Pacy.y+1]='@';
+                            mat[Pacy.x][Pacy.y] = '\0';
+                            Pacy.y += 1;
+                        }
+                    }
+                    break;
+                case 'E':
+                    system("cls");
+                    printf("\n\n\n\n\t\t Do you want to save game? (y/n)\n");
+                    scanf ("%c", &inp);
+                    if(inp == 'Y' || inp == 'y'){
+                        User->Status = TRUE;
+                        //save board:
+                        if (SaveGame(User, mat, m, n) == FALSE);
+                            printf("The Game is not saved!");
+                        //sleeeeeeeeeeeeeeep/////////////
+                        exit(0);
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
         if(numOfpnt-Eaten == 0){
             res = 1;
