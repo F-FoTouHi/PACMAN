@@ -27,7 +27,7 @@ typedef struct Pacman{
 //Functions:
 void StartInitialize(void);
 USER* Un_Logged_Menu(USER*, int);
-void Logged_In_Menu(USER*, USER*);
+int Logged_In_Menu(USER*, USER*);
 void Win(void); //just display
 void GameOver(void); //just display
 void setColor(int color) {
@@ -42,7 +42,7 @@ boolean SaveGame(USER* user, char** Map, int m, int n);
 USER* LoadAll(char*);
 boolean SaveAll(char*, USER*);
 void draw(char**, int, int);
-int Play(USER*, char**, char ); //it recieve user information and Map then give the score.
+int Play(USER* , char**, int, int); //it recieve user information and Map then give the score.
 char** Import_Mat2Map(char**, int, int);
 void gotoxy(short x, short y) {
     COORD pos = {x, y};
@@ -53,15 +53,15 @@ void gotoxy(short x, short y) {
 unsigned long long int username;
 int cmd, Num;
 char password[50];
-
+char filename[19] = "Pacman_History.bin";
 
 int main(){
     USER* pHead = NULL, *pUser, *ptmp;
-    int i, Num = 0;
+    int i, Num = 0, A;
     boolean login = FALSE;
     FILE *fp1, *fp2, *fp3;
     char *Matrix, c, *tmpMat;
-    char filename[19] = "Pacman_History.bin";
+    
 
     pHead = LoadAll(filename); 
 
@@ -77,7 +77,18 @@ int main(){
         pUser = Un_Logged_Menu(pHead, Num);
     else    
         pUser = pHead = Un_Logged_Menu(pHead, Num);
-    Logged_In_Menu(pUser, pHead);
+
+    while (pUser!=NULL){
+        login = TRUE;
+        while (login == TRUE){
+            A = Logged_In_Menu(pUser, pHead);
+            if (A == 0)
+                login = FALSE;
+        }
+        pUser = Un_Logged_Menu(pHead, Num);
+    }
+    
+
     return 0;
 }
 
@@ -202,145 +213,165 @@ void StartInitialize(void){
     setColor(FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 }//just display
 
-void Logged_In_Menu(USER* pUser, USER* Head){
+int Logged_In_Menu(USER* pUser, USER* Head){
+    
     system("cls");
-
-    boolean login = TRUE;
+    boolean login = TRUE, flag = FALSE;
     char dif;
-    int m, n, cmd2, cmd3, cmd1;
+    int m, n, cmd1, cmd2, cmd3;
     char **tmpMatrix = NULL;
     
-    while(login){
-        printf("\nPlay  (1)\nLogout  (2)\nDelete Account  (3)\nExit  (0)\n");
-        scanf ("%d", &cmd1);        
-        switch (cmd1){
-            case 0:
-                exit(0);
-            case 1:
-                system("cls");
-                if(pUser->Status){
-                    while(!tmpMatrix){
-                        system("cls");
-                        printf("You have an unfinished game!\n\nResume last game (1)\nStart new Game (2)\nBack (0)\n");
-                        scanf ("%d", &cmd2);
-                        switch(cmd2){
-                            case 0:
-                                break;
-                            case 1:
-                                //resume game
-                                FILE* filep;
-                                filep = fopen(pUser->FileName, "r");
-                                fread(&m, sizeof(int), 1, filep);
-                                fread(&n, sizeof(int), 1, filep);
-                                fread(tmpMatrix, sizeof(char), m*n, filep);
-                            case 2:
-                                //start new game
-                                //ask for difficultly
-                                printf("Enter your desired difficulty:\n Easy(1)\n Medium(2)\n Hard(3)\n");
-                                scanf("%d", &cmd3);
-                                
-                                while(tmpMatrix==NULL){
-                                    switch (cmd3){
-                                        case 1:
-                                            //read map a
-                                            tmpMatrix = LoadMap("mapA.txt");
-                                            dif = 'A';
-                                            break;
-                                        case 2:
-                                            //read map b
-                                            tmpMatrix = LoadMap("mapB.txt");
-                                            dif = 'B';
-                                            break;
-                                        case 3:
-                                            //read map c
-                                            tmpMatrix = LoadMap("mapC.txt");
-                                            dif = 'C';
-                                            break;
-                                        default:
-                                            printf("Pleas enter from given numbers.\n");
-                                            system("cls");
-                                            break;
-                                    }
+    printf("\nPlay  (1)\nLogout  (2)\nDelete Account  (3)\nExit  (0)\n");
+    scanf ("%d", &cmd1);        
+    switch (cmd1){
+        case 0:
+            SaveAll(filename, Head);
+            exit(0);
+            break;
+        case 1://play
+            system("cls");
+            if(pUser->Status){
+                while(!tmpMatrix){
+                    system("cls");
+                    printf("You have an unfinished game!\n\nResume last game (1)\nStart new Game (2)\nBack (0)\n");
+                    scanf ("%d", &cmd2);
+                    switch(cmd2){
+                        case 0:
+                            flag = TRUE;
+                            break;
+                        case 1:
+                            //resume game
+                            FILE* filep;
+                            filep = fopen(pUser->FileName, "rb");
+                            fread(&m, sizeof(int), 1, filep);
+                            fread(&n, sizeof(int), 1, filep);
+                            tmpMatrix = RestoreGame(Head,pUser->ID);
+                        case 2:
+                            //start new game
+                            //ask for difficultly
+                            printf("Enter your desired difficulty:\n Easy(1)\n Normal(2)\n Hard(3)\n");
+                            scanf("%d", &cmd3);
+                            while(tmpMatrix==NULL){
+                                switch (cmd3){
+                                    case 1:
+                                        //read map a
+                                        tmpMatrix = LoadMap("mapA.txt");
+                                        dif = 'A';
+                                        m = 5;
+                                        n = 10;
+                                        break;
+                                    case 2:
+                                        //read map b
+                                        tmpMatrix = LoadMap("mapB.txt");
+                                        dif = 'B';
+                                        m = 8;
+                                        n = 10;
+                                        break;
+                                    case 3:
+                                        //read map c
+                                        tmpMatrix = LoadMap("mapC.txt");
+                                        dif = 'C';
+                                        m = 10;
+                                        n = 11;
+                                        break;
+                                    default:
+                                        printf("Pleas enter from given numbers.\n");
+                                        system("cls");
+                                        break;
                                 }
-                                system("cls");
-                                break;
-                            default:
-                                printf("Pleas enter from given numbers...");
-                                sleep(3);
-                                system("cls");
-                                break;
-                        }
+                            }
+                            system("cls");
+                            break;
+                        default:
+                            printf("Pleas enter from given numbers...");
+                            sleep(3);
+                            system("cls");
+                            break;
                     }
-                    //now tmpMat is ready
+                    if (flag) break;
                 }
-                else{
-                    while(!tmpMatrix){
-                        system("cls");
-                        printf("\nStart new Game (1)\nBack (0)\n");
-                        scanf ("%d", &cmd2);
-                        switch(cmd2){
-                            case 0:
-                                break;
-                            case 1:
-                                //start new game
-                                //ask for difficultly
-                                printf("Enter your desired difficulty:\n Easy(1)\n Medium(2)\n Hard(3)\n");
-                                scanf("%d", &cmd3);
-                                
-                                while(tmpMatrix==NULL){
-                                    switch (cmd3){
-                                        case 1:
-                                            //read map a
-                                            tmpMatrix = LoadMap("mapA.txt");
-                                            dif = 'A';
-                                            break;
-                                        case 2:
-                                            //read map b
-                                            tmpMatrix = LoadMap("mapB.txt");
-                                            dif = 'B';
-                                            break;
-                                        case 3:
-                                            //read map c
-                                            tmpMatrix = LoadMap("mapC.txt");
-                                            dif = 'C';
-                                            break;
-                                        default:
-                                            printf("Pleas enter from given numbers.\n");
-                                            sleep(3);
-                                            system("cls");
-                                            break;
-                                    }
+                flag = FALSE;
+                //now tmpMat is ready
+            }
+            else{
+                while(!tmpMatrix){
+                    system("cls");
+                    printf("\nStart new Game (1)\nBack (0)\n");
+                    scanf ("%d", &cmd2);
+                    switch(cmd2){
+                        case (0):
+                            flag = TRUE;
+                            break;
+                        case (1):
+                            //start new game
+                            //ask for difficultly
+                            printf("Enter your desired difficulty:\n Easy(1)\n Normal(2)\n Hard(3)\n");
+                            scanf("%d", &cmd3);
+                            while(tmpMatrix==NULL){
+                                switch (cmd3){
+                                    case (1):
+                                        //read map a
+                                        tmpMatrix = LoadMap("mapA.txt");
+                                        dif = 'A';
+                                        m = 5;
+                                        n = 10;
+                                        break;
+                                    case (2):
+                                        //read map b
+                                        tmpMatrix = LoadMap("mapB.txt");
+                                        dif = 'B';
+                                        m = 8;
+                                        n = 10;
+                                        break;
+                                    case (3):
+                                        //read map c
+                                        tmpMatrix = LoadMap("mapC.txt");
+                                        dif = 'C';
+                                        m = 10;
+                                        n = 11;
+                                        break;
+                                    default:
+                                        printf("Pleas enter from given numbers.\n");
+                                        sleep(3);
+                                        system("cls");
+                                        break;
                                 }
-                                system("cls");
-                                break;
-                            default:
-                                printf("Pleas enter from given numbers...");
-                                sleep (3);
-                                system("cls");
-                                break;
-                        }
+                            }
+                            system("cls");
+                            break;
+                        default:
+                            printf("Pleas enter from given numbers...");
+                            sleep (3);
+                            system("cls");
+                            break;
                     }
-                    //now tmpMat is ready
+                    if(flag) break;
                 }
-                ////////////////*********PLAY********////////////
-                break;
-            case 2:
-                login = FALSE;
-                Un_Logged_Menu(Head, Num);
-                break;
-            case 3:
-                DeleteAccount(Head, pUser->ID, Num);
-                Num--;
-                Un_Logged_Menu(Head, Num);
-                break;
-            default:
-                printf ("Pleas enter from given numbers.");
-                sleep(3);
-                system("cls");
-                break;
-        }
+                flag = FALSE;
+                //now tmpMat is ready
+            }
+            ////////////////*********PLAY********////////////
+            pUser->Level = Play(pUser,tmpMatrix, m, n);
+            break;
+        case 2://Logout
+            login = FALSE;
+            break;
+        case 3://Delete account
+            DeleteAccount(Head, pUser->ID, Num);
+            Num--;
+            login = FALSE;
+            break;
+        default:
+            printf("Pleas enter from given numbers.");
+            sleep(3);
+            system("cls");
+            break;
     }
-    Un_Logged_Menu(Head,Num);
+
+    if (login == TRUE)
+        return 1;
+    else
+        return 0;
 }
 USER* Un_Logged_Menu(USER* Head, int num){
     system("cls");
@@ -351,6 +382,7 @@ USER* Un_Logged_Menu(USER* Head, int num){
         scanf("%d",&cmd);
         switch (cmd){      
             case 0:
+                SaveAll(filename, Head);
                 exit(0);    
             case 1:
                 Num++;
@@ -449,16 +481,18 @@ USER* CreatAccount(unsigned long long int user, char* pass, USER* phead, int ID)
             ptmp->pNext = p1;
         p1->username = user;
         strcpy(p1->password, pass);
-        scanf ("\nWhat is your name? %s", Name);
+        printf ("\nWhat is your name? ");
+        scanf ("%s", Name);
         strcpy(p1->name, Name);
         tmpid = ID;
         for(int i=7; i>=0; i--){
             p1->FileName[i] =  tmpid%10 + '0';
+            tmpid /=10;
         }
         p1->FileName[8] = '.';
-        p1->FileName[9] = 't';
-        p1->FileName[10] = 't';
-        p1->FileName[11] = 't';
+        p1->FileName[9] = 'b';
+        p1->FileName[10] = 'i';
+        p1->FileName[11] = 'n';
         p1->ID = ID;
         p1->Level = 0;
         p1->Status = FALSE;
@@ -476,8 +510,8 @@ void DeleteAccount(USER* phead, int id, int No){
         ptmp = ptmp->pNext;
     if (id<No)
         ptmp->pNext = ptmp ->pNext ->pNext;
-    else
-        ptmp ->pNext = NULL;
+    else //if (id == No)
+        ptmp->pNext = NULL;
 }
 
 char** LoadMap(char* filename){
@@ -490,7 +524,7 @@ char** LoadMap(char* filename){
     *Mat = (char*)malloc(n);
     for(int i=0; i<m; i++){
         for(int j=0; j<n; j++){
-            fscanf(fp,"%c", Mat[i][j]); //????????????
+            fscanf(fp,"%c", Mat[i][j]); //???????????????????????????????
         }
     }
     fclose(fp);
@@ -516,31 +550,13 @@ void draw(char** mat, int m, int n){
         printf("\n");
     }
 }
-int Play(USER* User, char**mat, char dif){
+int Play(USER* User, char**mat, int m, int n){
     //EatenPoints;
-    int Eaten = 0, m = 0, n = 0, i, j, numOfpnt = 0, random, numOfG = 0, G_x[4], G_y[4], p_x[3], p_y[3];
+    int Eaten = 0, i, j, numOfpnt = 0, random, numOfG = 0, G_x[4], G_y[4], p_x[3], p_y[3];
     boolean End = FALSE, res = FALSE, pFlag = FALSE;
     PACMAN Pacy;
     char input, tmp, **map, inp;
      
-    //find row & coloumn in m & n
-    if(dif == 'A'){
-        m = 5;
-        n = 10;
-    }
-    else{
-        if(dif=='B'){
-            m = 8;
-            n = 10;
-        }
-        else{
-            if(dif=='C'){
-                m = 10;
-                n = 11;
-            }
-        }
-    }
-
     //find loc of @  loc and No of  G & No of P: 
     for(i=0;i<m;i++){
         for (j=0; j<n; j++){
@@ -760,7 +776,7 @@ int Play(USER* User, char**mat, char dif){
                         if (SaveGame(User, mat, m, n) == FALSE);
                             printf("The Game is not saved!");
                         //sleeeeeeeeeeeeeeep/////////////
-                        exit(0);
+                        sleep(3);
                     }
                     break;
                 default:
@@ -833,16 +849,13 @@ boolean SaveGame(USER* user, char** Map, int m, int n){
     FILE *fp;
     USER *tmp;
     int i;
-
-    fwrite(&m,sizeof(int), 1, fp);
-    fwrite(&n,sizeof(int), 1, fp);
-
     tmp = user;
     //here tmp point to user:
     fp = fopen(tmp->FileName, "wb");
     if(fp==NULL)
         return 0;
-    
+    fwrite(&m,sizeof(int), 1, fp);
+    fwrite(&n,sizeof(int), 1, fp);    
     for(i=0; i<m; i++){
         for (int j=0; j<n; j++){
             fwrite(&Map[i][j],sizeof(char),1,fp);
