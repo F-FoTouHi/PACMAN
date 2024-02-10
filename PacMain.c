@@ -48,6 +48,8 @@ void gotoxy(short x, short y) {
     COORD pos = {x, y};
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }
+char** allocate (char**, int, int);
+
 
 //Global variables:
 unsigned long long int username;
@@ -101,8 +103,8 @@ void Win(void){
     printf("			   * *      *        *    *       *\n");
     printf("			    *       *        *    *       *\n");
     printf("			    *	     *      *     *       *\n");
-    printf("			    *          ****	       *     *\n");
-    printf(" 			    *    	                 * *\n");
+    printf("			    *          ****        *     *\n");
+    printf(" 			    *                        * *\n");
     setColor(FOREGROUND_GREEN | FOREGROUND_INTENSITY);
     printf("\n\n\n\n");
     printf("            #                   #     #####      #           #      #\n");
@@ -255,24 +257,27 @@ int Logged_In_Menu(USER* pUser, USER* Head){
                                 switch (cmd3){
                                     case 1:
                                         //read map a
-                                        tmpMatrix = LoadMap("mapA.txt");
                                         dif = 'A';
                                         m = 5;
                                         n = 10;
+                                        tmpMatrix = allocate(tmpMatrix, m, n);
+                                        tmpMatrix = LoadMap("mapA.txt");
                                         break;
                                     case 2:
                                         //read map b
-                                        tmpMatrix = LoadMap("mapB.txt");
                                         dif = 'B';
                                         m = 8;
                                         n = 10;
+                                        tmpMatrix = allocate(tmpMatrix, m, n);
+                                        tmpMatrix = LoadMap("mapB.txt");
                                         break;
                                     case 3:
                                         //read map c
-                                        tmpMatrix = LoadMap("mapC.txt");
                                         dif = 'C';
                                         m = 10;
                                         n = 11;
+                                        tmpMatrix = allocate(tmpMatrix, m, n);
+                                        tmpMatrix = LoadMap("mapC.txt");    
                                         break;
                                     default:
                                         printf("Pleas enter from given numbers.\n");
@@ -311,24 +316,27 @@ int Logged_In_Menu(USER* pUser, USER* Head){
                                 switch (cmd3){
                                     case (1):
                                         //read map a
-                                        tmpMatrix = LoadMap("mapA.txt");
                                         dif = 'A';
                                         m = 5;
                                         n = 10;
+                                        tmpMatrix = allocate(tmpMatrix, m, n);
+                                        tmpMatrix = LoadMap("mapA.txt");
                                         break;
                                     case (2):
                                         //read map b
-                                        tmpMatrix = LoadMap("mapB.txt");
                                         dif = 'B';
                                         m = 8;
                                         n = 10;
+                                        tmpMatrix = allocate(tmpMatrix, m, n);
+                                        tmpMatrix = LoadMap("mapB.txt");
                                         break;
                                     case (3):
                                         //read map c
-                                        tmpMatrix = LoadMap("mapC.txt");
                                         dif = 'C';
                                         m = 10;
                                         n = 11;
+                                        tmpMatrix = allocate(tmpMatrix, m, n);
+                                        tmpMatrix = LoadMap("mapC.txt");
                                         break;
                                     default:
                                         printf("Pleas enter from given numbers.\n");
@@ -520,6 +528,7 @@ char** LoadMap(char* filename){
     char** Mat;
     FILE* fp;
     int m, n, i;
+
     fp = fopen(filename, "r");
     fscanf(fp,"%d %d", &m, &n);
     Mat = (char**)malloc(sizeof(char*)*m);
@@ -528,10 +537,12 @@ char** LoadMap(char* filename){
     }
     for(i=0; i<m; i++){
         for(int j=0; j<n; j++){
-            fscanf(fp,"%c", Mat[i][j]); //???????????????????????????????
+            fscanf(fp," %c", &Mat[i][j]); //???????????????????????????????
         }
     }
     fclose(fp);
+
+
     for( i=0; i<m; i++){
         for (int j=0; j<n; j++){
             if (Mat[i][j]=='|' || Mat[i][j] == '-')
@@ -542,6 +553,8 @@ char** LoadMap(char* filename){
             }
         }
     }
+
+
     return Mat;
 } //It load information from file and save to an array
 
@@ -556,10 +569,10 @@ void draw(char** mat, int m, int n){
 }
 int Play(USER* User, char**mat, int m, int n){
     //EatenPoints;
-    int Eaten = 0, i, j, numOfpnt = 0, random, numOfG = 0, G_x[4], G_y[4], p_x[3], p_y[3];
-    boolean End = FALSE, res = FALSE, pFlag = FALSE;
+    int Eaten = 0, i, j, numOfpnt = 0, random, numOfG = 0, G_x[4], G_y[4];
+    boolean End = FALSE;
     PACMAN Pacy;
-    char input, tmp, **map, inp;
+    char input, tmp, **map, inp, res; //res == 0 : loose/ res==1 : win/ res == 2: non-coplete game
      
     //find loc of @  loc and No of  G & No of P: 
     for(i=0;i<m;i++){
@@ -594,7 +607,7 @@ int Play(USER* User, char**mat, int m, int n){
 
             switch (random) {
                 case 0: //U
-                    if (mat[G_x[i]-1][G_y[i]] != '#') {
+                    if (mat[G_x[i]-1][G_y[i]] != '#' && mat[G_x[i]-1][G_y[i]] != 'P') {
                         if(mat[G_x[i]-1][G_y[i]] == '@'){
                             mat[G_x[i]-1][G_y[i]] = 'G';
                             mat[G_x[i]][G_y[i]] = ' ';
@@ -604,11 +617,6 @@ int Play(USER* User, char**mat, int m, int n){
                         }
                         else{
                             if (mat[G_x[i]-1][G_y[i]] == 'P'){
-                                //flag to recover pill
-                                pFlag = TRUE;
-                                p_x[i] = G_x[i]-1;
-                                p_y[i] = G_y[i];
-                                mat[G_x[i]-1][G_y[i]] = 'G';
                                 mat[G_x[i]][G_y[i]] = ' ';
                             }
                             else{ // ' ' or 'G'
@@ -620,7 +628,7 @@ int Play(USER* User, char**mat, int m, int n){
                     }
                     break;
                 case 1://D
-                    if (mat[G_x[i]+1][G_y[i]] != '#') {
+                    if (mat[G_x[i]+1][G_y[i]] != '#' && mat[G_x[i]+1][G_y[i]] != 'P') {
                         if(mat[G_x[i]+1][G_y[i]] == '@'){
                             mat[G_x[i]+1][G_y[i]] = 'G';
                             mat[G_x[i]][G_y[i]] = ' ';
@@ -630,11 +638,6 @@ int Play(USER* User, char**mat, int m, int n){
                         }
                         else{
                             if (mat[G_x[i]+1][G_y[i]] == 'P'){
-                                //flag to recover pill
-                                pFlag = TRUE;
-                                p_x[i] = G_x[i]+1;
-                                p_y[i] = G_y[i];
-                                mat[G_x[i]+1][G_y[i]] = 'G';
                                 mat[G_x[i]][G_y[i]] = ' ';
                             }
                             else{ // ' ' or 'G'
@@ -646,7 +649,7 @@ int Play(USER* User, char**mat, int m, int n){
                     } 
                     break;
                 case 2://L
-                    if (mat[G_x[i]][G_y[i]-1] != '#') {
+                    if (mat[G_x[i]][G_y[i]-1] != '#' && mat[G_x[i]][G_y[i]-1] != 'P') {
                         if(mat[G_x[i]][G_y[i]-1] == '@'){
                             mat[G_x[i]][G_y[i]-1] = 'G';
                             mat[G_x[i]][G_y[i]] = ' ';
@@ -656,11 +659,6 @@ int Play(USER* User, char**mat, int m, int n){
                         }
                         else{
                             if (mat[G_x[i]][G_y[i]-1] == 'P'){
-                                //flag to recover pill
-                                pFlag = TRUE;
-                                p_x[i] = G_x[i];
-                                p_y[i] = G_y[i]-1;
-                                mat[G_x[i]][G_y[i]-1] = 'G';
                                 mat[G_x[i]][G_y[i]] = ' ';
                             }
                             else{ // ' ' or 'G'
@@ -672,7 +670,7 @@ int Play(USER* User, char**mat, int m, int n){
                     }
                     break;
                 case 3://R
-                    if (mat[G_x[i]][G_y[i]+1] != '#') {
+                    if (mat[G_x[i]][G_y[i]+1] != '#' && mat[G_x[i]][G_y[i]+1] != 'P') {
                         if(mat[G_x[i]][G_y[i]+1] == '@'){
                             mat[G_x[i]][G_y[i]+1] = 'G';
                             mat[G_x[i]][G_y[i]] = ' ';
@@ -682,11 +680,6 @@ int Play(USER* User, char**mat, int m, int n){
                         }
                         else{
                             if (mat[G_x[i]][G_y[i]+1] == 'P'){
-                                //flag to recover pill
-                                pFlag = TRUE;
-                                p_x[i] = G_x[i];
-                                p_y[i] = G_y[i]+1;
-                                mat[G_x[i]][G_y[i]+1] = 'G';
                                 mat[G_x[i]][G_y[i]] = ' ';
                             }
                             else{ // ' ' or 'G'
@@ -703,8 +696,8 @@ int Play(USER* User, char**mat, int m, int n){
         }
        
         //if kbhit>0 move pacman
-        if (_kbhit()){
-            input= getch();
+        if (kbhit()){
+            input = getch();
             switch (input){
                 case 72://UP
                     if(mat[Pacy.x-1][Pacy.y] != '#'){
@@ -770,23 +763,29 @@ int Play(USER* User, char**mat, int m, int n){
                         }
                     }
                     break;
+                case 'e':
                 case 'E':
                     system("cls");
-                    printf("\n\n\n\n\t\t Do you want to save game? (y/n)\n");
+                    printf("\n\n\n\t\t Do you want to save game? (y/n)\n");
                     scanf ("%c", &inp);
                     if(inp == 'Y' || inp == 'y'){
                         User->Status = TRUE;
                         //save board:
                         if (SaveGame(User, mat, m, n) == FALSE);
                             printf("The Game is not saved!");
+                        else    
+                            printf("Saved.");
                         //sleeeeeeeeeeeeeeep/////////////
                         sleep(3);
                     }
+                    res = 2;
                     break;
                 default:
                     break;
             }
         }
+        if (res == 2)
+            return 0;//End playing
         if(numOfpnt-Eaten == 0){
             res = 1;
             End = TRUE;
@@ -796,17 +795,17 @@ int Play(USER* User, char**mat, int m, int n){
         else
             input = getch();
     }
-
     if(res==0){
-        User->Level -= 1;
         GameOver();
+        return -1;
     }
     else{
-        User->Level += 3;
-        Win();
-    }
-    return User->Level;
-    
+        if (res == 1){
+            Win();
+            return 3;
+        }
+    }        
+
 }
 
 boolean SaveAll(char *fileName, USER *Head){
@@ -888,43 +887,34 @@ char** RestoreGame(USER *Head, int id){
     fread(&n,sizeof(int),1,fp);
 
     //allocate with m & n:
-    Mat = (char**)malloc(sizeof(char*)*m);
-    for(i=0; i<m; i++){
-        Mat[i] = (char*)malloc(sizeof(char)*n);
-    }
+    Mat = allocate(Mat, m, n);
 
     for(i=0; i<m; i++){
         for (int j=0; j<n; j++){
-            fread(&Mat[i][j],sizeof(char),1,fp); ///////////??????????????/
+            fread(&Mat[i][j],sizeof(char),1,fp); ///////////?????????????
         }
     }
     fclose(fp);
     return Mat;
 }
 
-char** Import_Mat2Map(char** mat, int m, int n){
-    int i, j, k, l;
-    char **NewMat;
-    NewMat = (char **)malloc(sizeof(char*)*m*4);
-    for(i=0; i<n*6; i++){
-        NewMat[i] = (char*)malloc(sizeof(char)*n*6);
+char** Import_Mat2Map(char** mat, int rows, int cols) {
+    char** NewMat = (char**)malloc(4 * rows * sizeof(char*));
+    for (int i = 0; i < 4 * rows; i++) {
+        NewMat[i] = (char*)malloc(6 * cols * sizeof(char));
     }
-    for (i=0; i<m; i++){
-        for(j=0; j<n; j++){
-            switch (mat[i][j]){
-                case '#':
-                    for(k=i*4; k<4*i+4; k++){
-                        for(l=j*6; l<6*j+6; l++)
-                            NewMat[k][l] = '#';
-                    }
-                    break;
-                case ' ':
-                    for(k=i*4; k<4*i+4; k++){
-                        for(l=j*6; l<6*j+6; l++)
-                            NewMat[k][l] = ' ';
-                    }
-                    break;
-                case '@':
+    int k, l;
+
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            if(mat[i][j]=='#'){
+                for(k=i*4; k<4*i+4; k++){
+                    for(l=j*6; l<6*j+6; l++)
+                        NewMat[k][l] = '#';
+                }
+            }
+            else{
+                if(mat[i][j]=='@'){
                     for(k=i*4+1; k<6*i+4; k+=2){
                         for(l=j*6; l<j*6+6; l++){
                             if (l%6==0)
@@ -938,66 +928,87 @@ char** Import_Mat2Map(char** mat, int m, int n){
                         }
                     }
                     for(k=0; k<6; k++){
-                        switch (k)
-                        {
-                        case 0:
-                            NewMat[4*i+2][6*j+k]= '(';
-                            break;
-                        case 1:
-                            NewMat[4*i+2][6*j+k]= ' ';
-                            break;                        
-                        case 2:
-                            NewMat[4*i+2][6*j+k]= ' ';
-                            break;
-                        case 3:
-                            NewMat[4*i+2][6*j+k]= 'o';
-                            break;
-                        case 4:
-                            NewMat[4*i+2][6*j+k]= 'O';
-                            break;
-                        case 5:
-                            NewMat[4*i+2][6*j+k]= '<';
-                            break;
+                        switch (k){
+                            case 0:
+                                NewMat[4*i+2][6*j+k]= '(';
+                                break;
+                            case 1:
+                                NewMat[4*i+2][6*j+k]= ' ';
+                                break;                        
+                            case 2:
+                                NewMat[4*i+2][6*j+k]= ' ';
+                                break;
+                            case 3:
+                                NewMat[4*i+2][6*j+k]= 'o';
+                                break;
+                            case 4:
+                                NewMat[4*i+2][6*j+k]= 'O';
+                                break;
+                            case 5:
+                                NewMat[4*i+2][6*j+k]= '<';
+                                break;
                         }
                     }
+
                     for(k=0; k<6; k++)
                         NewMat[4*i][6*j+k] =' ';
-                    break; 
-                case 'P':
-                    for(k=0; k<4; k++){
-                        for(l=0; l<6; l++){
-                            NewMat[4*i+k][6*j+l]= ' ';
+                    NewMat[4*i+3][6*j+2] = '_';
+                    NewMat[4*i+3][6*j+3] = '_';
+                    NewMat[4*i+3][6*j+4] = '_';                        
+                }
+                else{
+                    if (mat[i][j]=='P'){
+                        for(k=0; k<4; k++){
+                            for(l=0; l<6; l++){
+                                NewMat[4*i+k][6*j+l]= ' ';
+                            }
+                        }
+                        NewMat[4*i+1][6*j+2] = '/';
+                        NewMat[4*i+1][6*j+3] = '\\';
+                        NewMat[4*i+2][6*j+1] = '#';
+                        NewMat[4*i+2][6*j+4] = '#';
+                    }
+                    else{
+                        if(mat[i][j]=='G'){
+                            for(k=4*i; k<4*i+4; k++){
+                                for(l=6*j; l<6*j+6; l++)
+                                    NewMat[k][l] =' ';
+                            }                          
+                            for(k=1; k<3; k++){
+                                for(l=1; l<6; l+=4){
+                                    NewMat[4*i+k][6*j+l]= '|';
+                                }
+                            }                    
+                            for(k=2; k<5; k++){
+                                NewMat[4*i+3][6*j+k]= '^';
+                            }
+                            //.
+                            NewMat[4*i][6*j+2]= '.';
+                            NewMat[4*i][6*j+3]= '-';
+                            NewMat[4*i][6*j+4]= '.';
+                            NewMat[4*i+1][6*j+3]= 'o';
+                            NewMat[4*i+1][6*j+4]= 'O';
+                            NewMat[4*i+3][6*j+1]= '.';
+                            NewMat[4*i+3][6*j+5]= '.';
+                        }
+                        else{
+                            for(k=i*4; k<4*i+4; k++){
+                                for(l=j*6; l<6*j+6; l++)
+                                    NewMat[k][l] = ' ';
+                            } 
                         }
                     }
-                    NewMat[4*i+1][6*j+2] = '\\';
-                    NewMat[4*i+1][6*j+3] = '/';
-                    NewMat[4*i+2][6*j+1] = '#';
-                    NewMat[4*i+2][6*j+4] = '#';
-                    break;
-                case 'G':
-                    for(k=0; k<6; k++)
-                        NewMat[4*i][6*j+k] =' ';
-                    for(k=1; k<3; k++){
-                        for(l=1; l<6; l+=4){
-                            NewMat[4*i+k][6*j+l]= '|';
-                        }
-                    }                    
-                    for(k=2; k<5; k++){
-                        NewMat[4*i+3][6*j+k]= '^';
-                    }
-                    //.
-                    NewMat[4*i][6*j+2]= '.';
-                    NewMat[4*i][6*j+3]= '-';
-                    NewMat[4*i][6*j+4]= '.';
-                    NewMat[4*i+1][6*j+3]= 'o';
-                    NewMat[4*i+1][6*j+4]= 'O';
-                    NewMat[4*i+3][6*j+1]= '.';
-                    NewMat[4*i+3][6*j+5]= '.';
-                    break;
-                default:
-                    break;
+                }
             }
         }
     }
     return NewMat;
+}
+
+char** allocate(char** mat, int m, int n){
+    mat = (char**)malloc(sizeof(char*)*m);
+    for(int i=0; i<m; i++){
+        mat[i] = (char*)malloc(sizeof(char)*n);
+    }
+    return mat;
 }
